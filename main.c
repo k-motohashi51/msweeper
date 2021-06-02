@@ -17,7 +17,7 @@
 #define GAMEOVER 0
 #define CHAIN 1
 #define MARK 2
-#define NORMAL 3
+#define OPEN 3
 
 
 typedef struct {
@@ -43,11 +43,11 @@ int main(void) {
   int c_y;  // 現在入力されたy
   char c_command; // 現在入力されたコマンド
   int status_code;  // Status Code
-  
-  do { 
-    /* 初期化 */  
-    init(data);
 
+  /* 初期化 */  
+  init(data);
+
+  do { 
     /* 表示 */
     disp(data);
 
@@ -56,7 +56,8 @@ int main(void) {
 
     /* 判定 */
     status_code = judge(data, c_x, c_y, c_command);
-
+  
+    printf("status_code:GAMEOVER=0 CHAIN=1 MARK=2 OPEN=3\n");
     printf("status_code = %d\n", status_code);
 
     /* データ更新 */
@@ -194,21 +195,23 @@ int get_mine(data_t data[][B_SIZE], int x, int y) {
 }
 
 int judge(data_t data[][B_SIZE], int x, int y, char command) {
-  int result;
+  int status_code;
 
   /* 地雷を踏んだか、連鎖反応は起きるか */
   if(data[y][x].is_mine == true) {
     printf("ゲームオーバ\n");
-    result = GAMEOVER;
+    status_code = GAMEOVER;
+  } else if(command == 'm') {
+    status_code = MARK;
   } else if(data[y][x].mine_around == 0) {
-    result = CHAIN;
-  } else if(command == 's') {
-    result = MARK;
+    status_code = CHAIN;
+  } else if(command == 's'){
+    status_code = OPEN;
   } else {
-    result = NORMAL;
+    printf("うまくjudgeできません\n");
   }
 
-  return result;
+  return status_code;
 }
 
 void update(data_t data[][B_SIZE], int x, int y, char status_code) {
@@ -221,7 +224,7 @@ void update(data_t data[][B_SIZE], int x, int y, char status_code) {
     case MARK:
       data[y][x].status = MARKED;
       break;
-    case NORMAL:
+    case OPEN:
       data[y][x].status = OPENED;
       break;
     default:
@@ -230,17 +233,23 @@ void update(data_t data[][B_SIZE], int x, int y, char status_code) {
 }
 
 void chain(data_t data[][B_SIZE], int x, int y, int p_x, int p_y) {
-  printf("x = %d, y = %d, p_x = %d, p_y = %d\n", x, y, p_x, p_y);
+  //printf("x = %d, y = %d, p_x = %d, p_y = %d\n", x, y, p_x, p_y);
 
   for(int i = -1; i < 2; i++) {
     for(int j = -1; j < 2; j++) {
+      printf("i = %d, j = %d\n", i, j);
       /* 真ん中のマスは調べない */
       if(i != 0 || j != 0) {
         /* 周りのマスが0~7の範囲内で調査可能な時 */
         if(0 <= y + i && y + i <= 7 && 0 <= x + j && x + j <= 7) {
           if(p_x != x + j || p_y != y + i) {
+            printf("data[%d][%d]を調べます\n", x + j, y + i);
             if(data[y + i][x + j].mine_around == 0) {
+              printf("\tdata[%d][%d].mine_around == 0でした\n", y + i, x + j);
+              printf("引数x = %d, y = %d, p_x = %d, p_y = %dで再帰します\n", x+i, y+i, x, y);
+              printf("\t/*************\n");
               chain(data, x + i, y + i, x, y);
+              printf("\t*************/\n");
               data[y][x].status = SPACED;
             } else {
               data[y + i][x + i].status = OPENED;
