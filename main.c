@@ -13,12 +13,12 @@
 #define SPACED 3  // 地雷が周囲にないと判明している
 
 /* Status Code */
-#define G_OVER 0    // ゲームオーバーだった
-#define CHAIN 1     // 開拓の連鎖が起きる
-#define MARK 2      // 地雷としてマークした
-#define OPEN 3      // 開拓された
-#define G_CLEAR 4   // ゲームクリア
-#define UNDEF -1    // 未定義
+#define G_OVER 0  // ゲームオーバーだった
+#define CHAIN 1   // 開拓の連鎖が起きる
+#define MARK 2    // 地雷としてマークした
+#define OPEN 3    // 開拓された
+#define G_CLEAR 4 // ゲームクリア
+#define UNDEF -1  // 未定義
 
 // マスの状態や周囲の状況を表す構造体
 typedef struct {
