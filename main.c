@@ -27,46 +27,51 @@ typedef struct {
   bool  is_mine;      // 自分が地雷かどうか
 } data_t;
 
-void  init(data_t data[][B_SIZE]);
-void  disp(data_t data[][B_SIZE]);
-void  input(int *x, int *y, char *command, data_t data[][B_SIZE]);
+void  initialize(data_t data[][B_SIZE]);
+void  display(data_t data[][B_SIZE]);
+void  input(int *, int *, char *, data_t data[][B_SIZE]);
 void  decide_mine(data_t data[][B_SIZE]);
-void  calc_mnum(data_t data[][B_SIZE]);
-int   get_mine(data_t data[][B_SIZE], int x, int y);
-int   judge(data_t data[][B_SIZE], int x, int y, char command);
-void  update(data_t data[][B_SIZE], int x, int y, char status_code);
-void  chain(data_t data[][B_SIZE], int x, int y, int p_x, int p_y);
+void  count_mine(data_t data[][B_SIZE]);
+int   get_mine(int, int, data_t data[][B_SIZE]);
+int   judge(int, int, char, data_t data[][B_SIZE]);
+void  update(int, int, char, data_t data[][B_SIZE]);
+void  chain(int, int, int, int, data_t data[][B_SIZE]);
 
 
 int main(void) {
   data_t data[B_SIZE][B_SIZE];  // data[y][x]
-  int c_x;          // 現在入力されたx
-  int c_y;          // 現在入力されたy
-  char c_command;   // 現在入力されたコマンド
-  int status_code;  // Status Code
+  int   c_x;          // Current_x
+  int   c_y;          // Current_y
+  char  c_command;    // Current_command
+  int   status_code;  // Status Code
 
-  init(data); // 初期化
+  initialize(data);
   
   // ゲームオーバーになるまで繰り返す
   do { 
-    disp(data); // 表示
-    input(&c_x, &c_y, &c_command, data);  // 入力
-    status_code = judge(data, c_x, c_y, c_command); // 判定
+    display(data);
+
+    input(&c_x, &c_y, &c_command, data);
+
+    status_code = judge(c_x, c_y, c_command, data);
+
     if(status_code == UNDEF) {
       printf("未定義：judge()\n");
       exit(1);
     }
+
     /* テスト表示 */
     printf("status_code:G_OVER=0 CHAIN=1 MARK=2 OPEN=3\n");
     printf("status_code = %d\n", status_code);
 
-    update(data, c_x, c_y, status_code);  // データ更新
+    update(c_x, c_y, status_code, data);
+
   } while(status_code != G_OVER && status_code != G_CLEAR);
 
     return 0;
 }
 
-void init(data_t data[][B_SIZE]) {
+void initialize(data_t data[][B_SIZE]) {
   for(int i = 0; i < B_SIZE; i++) {
     for(int j = 0; j < B_SIZE; j++) {
       data[i][j].status = CLOSED;
@@ -74,8 +79,8 @@ void init(data_t data[][B_SIZE]) {
     }
   }
 
-  decide_mine(data);  // 地雷の場所を決定
-  calc_mnum(data);    // 各々のマスの周囲の地雷数調査
+  decide_mine(data);
+  count_mine(data);    // 各々のマスの周囲の地雷数調査
 
   // 最初のナビ
   printf("*** M Sweeper ***\n");
@@ -86,7 +91,7 @@ void init(data_t data[][B_SIZE]) {
   printf("  m   ... (x,y)にMマークをつける\n");
 }
 
-void disp(data_t data[][B_SIZE]) {
+void display(data_t data[][B_SIZE]) {
   printf("\n ");
 
   for(int i = 0; i < B_SIZE; i++) {
@@ -157,15 +162,15 @@ void decide_mine(data_t data[][B_SIZE]) {
   }
 }
 
-void calc_mnum(data_t data[][B_SIZE]) {
+void count_mine(data_t data[][B_SIZE]) {
   for(int i = 0; i < B_SIZE; i++) {
     for(int j = 0; j < B_SIZE; j++) {
-      data[j][i].mine_around = get_mine(data, i, j);
+      data[j][i].mine_around = get_mine(i, j, data);
     }
   }
 }
 
-int get_mine(data_t data[][B_SIZE], int x, int y) {
+int get_mine(int x, int y, data_t data[][B_SIZE]) {
   int mnum = 0;
 
   for(int i = -1; i < 2; i++) {
@@ -185,7 +190,7 @@ int get_mine(data_t data[][B_SIZE], int x, int y) {
   return mnum;
 }
 
-int judge(data_t data[][B_SIZE], int x, int y, char command) {
+int judge(int x, int y, char command, data_t data[][B_SIZE]) {
   int status_code;  // ステータスコード
   int is_clear = 0; // ゲームクリアかどうか
 
@@ -215,12 +220,12 @@ int judge(data_t data[][B_SIZE], int x, int y, char command) {
   return status_code;
 }
 
-void update(data_t data[][B_SIZE], int x, int y, char status_code) {
+void update(int x, int y, char status_code, data_t data[][B_SIZE]) {
   switch(status_code) {
     case G_OVER:
       break;
     case CHAIN:
-      chain(data, x, y, x, y);      
+      chain(x, y, x, y, data);      
       break;
     case MARK:
       data[y][x].status = MARKED;
@@ -233,7 +238,7 @@ void update(data_t data[][B_SIZE], int x, int y, char status_code) {
   }  
 }
 
-void chain(data_t data[][B_SIZE], int x, int y, int p_x, int p_y) {
+void chain(int x, int y, int p_x, int p_y, data_t data[][B_SIZE]) {
   int f_x, f_y; // 次に調べるマス
   
   data[y][x].status = SPACED; // 真ん中は必ずSPACED
@@ -256,7 +261,7 @@ void chain(data_t data[][B_SIZE], int x, int y, int p_x, int p_y) {
       } else {
         // 調べる条件は満たしている
         if(data[f_y][f_x].mine_around == 0) {
-          chain(data, f_x, f_y, x, y);  // 次に調べる場所がSPECED 
+          chain(f_x, f_y, x, y, data);  // 次に調べる場所がSPECED 
         } else {
           data[f_y][f_x].status = OPENED;
         }
