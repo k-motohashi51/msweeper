@@ -220,8 +220,8 @@ void locate_mine(settings_t settings, cell_t **cell) {
   for(int i = 0; i < settings.mine_num; i++) {
     // locate mine without duplication
     do {
-      r_x = rand() % settings.mine_num;
-      r_y = rand() % settings.mine_num;
+      r_x = rand() % settings.board_size;
+      r_y = rand() % settings.board_size;
     } while(cell[r_y][r_x].is_mine == true);
 
     cell[r_y][r_x].is_mine = true;
