@@ -28,6 +28,7 @@ typedef struct {
   int   c_y;        // current_y
   char  c_command;  // current_command
   int   operate_code;
+  long  elapsed_time;
 
 } settings_t;
 
@@ -61,11 +62,15 @@ int main(void) {
   
   settings_t settings;
   cell_t **cell;
+  long start_time;
+  long end_time;
 
   cell = initialize(&settings, cell);
 
   printf("init ok\n");
   
+  start_time = 
+
   do {
     display_board(settings, cell);
 
