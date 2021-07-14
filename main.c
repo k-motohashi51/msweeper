@@ -23,12 +23,12 @@ typedef struct {
   
   int   board_size;
   int   mine_num;
-  int   elapsed_time;
   int   c_x;        // current_x
   int   c_y;        // current_y
   char  c_command;  // current_command
   int   operate_code;
-  long  elapsed_time;
+  time_t  elapsed_time; // 経過した時間
+  int turn_cnt; // 経過ターン
 
 } settings_t;
 
@@ -62,14 +62,14 @@ int main(void) {
   
   settings_t settings;
   cell_t **cell;
-  long start_time;
-  long end_time;
+  time_t start_time;
+  time_t end_time;
 
   cell = initialize(&settings, cell);
 
   printf("init ok\n");
   
-  start_time = 
+  start_time = time(NULL);
 
   do {
     display_board(settings, cell);
@@ -79,9 +79,16 @@ int main(void) {
     settings.operate_code = judge_operation(settings, cell);
 
     update(settings, cell);
-  } while(settings.operate_code != GAME_OVER && settings.operate_code != GAME_CLEAR);
 
-  for(int i = 0; i < settings.board_size; i++) {
+    end_time = time(NULL);
+
+    settings.elapsed_time = end_time - start_time;
+    printf("経過時間：%ld\n", settings.elapsed_time);
+
+    settings.turn_cnt ++;
+  } while (settings.operate_code != GAME_OVER && settings.operate_code != GAME_CLEAR);
+
+  for (int i = 0; i < settings.board_size; i++) {
     free(cell[i]);
   }
 
@@ -114,6 +121,8 @@ cell_t** initialize(settings_t *settings, cell_t **cell) {
       cell[i][j].is_mine = false;
     }
   }
+
+  settings->turn_cnt = 0;
 
   locate_mine(*settings, cell);
   count_mine(*settings, cell);
